@@ -1,0 +1,16 @@
+{
+  "name": "food-regulations-ai",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "AI-powered Animal Feed & Pet Food Label Compliance Evaluator using RAG",
+  "main": "index.js",
+  "scripts": {
+    "ingest": "node index.js ingest",
+    "evaluate": "node index.js evaluate"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "openai": "^4.77.0",
+    "pdf-parse": "^1.1.1"
+  }
+}

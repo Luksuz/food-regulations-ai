@@ -1,0 +1,8 @@
+node_modules/
+.env
+.next/
+data/vectors.json
+data/upload-*
+.claude/
+web/.next/
+web/node_modules/
