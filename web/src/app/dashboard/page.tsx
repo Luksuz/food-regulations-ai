@@ -299,6 +299,24 @@ export default function Dashboard() {
                 )}
               </div>
 
+              {/* Sample Label */}
+              {!file && (
+                <div className="mt-4 flex items-center gap-3">
+                  <span className="text-xs text-night-500">or try a sample:</span>
+                  <button
+                    onClick={async () => {
+                      const res = await fetch("/sample-label.webp");
+                      const blob = await res.blob();
+                      const sampleFile = new File([blob], "pedigree-dog-food-label.webp", { type: "image/webp" });
+                      setFile(sampleFile);
+                    }}
+                    className="text-xs text-emit-400 hover:text-emit-300 underline underline-offset-2 transition-colors"
+                  >
+                    Pedigree Dog Food Label
+                  </button>
+                </div>
+              )}
+
               {/* Category Selection */}
               <div className="mt-8">
                 <p className="text-sm font-semibold mb-3">Evaluate against:</p>
