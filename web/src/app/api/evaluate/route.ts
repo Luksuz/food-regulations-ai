@@ -1,48 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, unlink, readFile } from "fs/promises";
-import path from "path";
-import { randomUUID } from "crypto";
+import { extractLabelFromBuffer } from "@/lib/extractor";
+import { evaluateCompliance } from "@/lib/complianceEngine";
 
 export const maxDuration = 120;
 
-async function runEvaluator(filePath: string, categories: string[]): Promise<string> {
-  const { execFile } = await import("child_process");
-  const { promisify } = await import("util");
-  const exec = promisify(execFile);
-
-  const catFlag = categories.length > 0 ? ["--cat", categories.join(",")] : [];
-  const projectRoot = path.resolve(process.cwd(), "..");
-
-  const { stdout, stderr } = await exec(
-    "node",
-    ["index.js", "evaluate", filePath, ...catFlag],
-    { cwd: projectRoot, timeout: 120000 }
-  );
-
-  return stdout + (stderr || "");
-}
-
-function parseReport(raw: string) {
-  // Extract the report between the === lines
-  const reportMatch = raw.match(/={10,}\n([\s\S]*?)\n={10,}/);
-  const report = reportMatch ? reportMatch[1].trim() : raw;
-
-  // Extract compliance score
-  const scoreMatch = report.match(/Compliance Score:\s*(\d+)/);
-  const score = scoreMatch ? parseInt(scoreMatch[1]) : null;
-
-  // Extract label text
-  const labelMatch = raw.match(/--- Extracted Label ---\n([\s\S]*?)\n\n=== PHASE/);
-  const labelText = labelMatch ? labelMatch[1].trim() : null;
-
-  return { report, score, labelText };
+function parseScore(report: string): number | null {
+  const match = report.match(/Compliance Score:\s*(\d+)/);
+  return match ? parseInt(match[1]) : null;
 }
 
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
-    const categories = (formData.get("categories") as string) || "animal-food-labeling,aafco-pet-food";
+    const categories =
+      (formData.get("categories") as string) || "animal-food-labeling,aafco-pet-food";
 
     if (!file) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
@@ -51,28 +23,25 @@ export async function POST(req: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Save to temp file
-    const ext = path.extname(file.name) || ".jpg";
-    const tmpName = `upload-${randomUUID()}${ext}`;
-    const tmpPath = path.resolve(process.cwd(), "..", "data", tmpName);
+    // Phase 1: Extract label text (Vision OCR or plain text)
+    const labelText = await extractLabelFromBuffer(buffer, file.name);
 
-    await writeFile(tmpPath, buffer);
+    // Phase 2: RAG-powered compliance evaluation
+    const catList = categories.split(",").filter(Boolean);
+    const report = await evaluateCompliance(
+      labelText,
+      catList.length > 0 ? catList : null
+    );
 
-    try {
-      const raw = await runEvaluator(tmpPath, categories.split(",").filter(Boolean));
-      const { report, score, labelText } = parseReport(raw);
+    const score = parseScore(report);
 
-      return NextResponse.json({
-        report,
-        score,
-        labelText,
-        categories: categories.split(","),
-        timestamp: new Date().toISOString(),
-      });
-    } finally {
-      // Cleanup temp file
-      await unlink(tmpPath).catch(() => {});
-    }
+    return NextResponse.json({
+      report,
+      score,
+      labelText,
+      categories: catList,
+      timestamp: new Date().toISOString(),
+    });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
     console.error("[API] Evaluation error:", message);
