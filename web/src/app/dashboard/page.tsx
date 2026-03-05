@@ -299,9 +299,9 @@ export default function Dashboard() {
                 )}
               </div>
 
-              {/* Sample Label */}
+              {/* Sample Labels */}
               {!file && (
-                <div className="mt-4 flex items-center gap-3">
+                <div className="mt-4 flex items-center gap-3 flex-wrap">
                   <span className="text-xs text-night-500">or try a sample:</span>
                   <button
                     onClick={async () => {
@@ -312,7 +312,19 @@ export default function Dashboard() {
                     }}
                     className="text-xs text-emit-400 hover:text-emit-300 underline underline-offset-2 transition-colors"
                   >
-                    Pedigree Dog Food Label
+                    Pedigree Dog Food
+                  </button>
+                  <span className="text-xs text-night-600">|</span>
+                  <button
+                    onClick={async () => {
+                      const res = await fetch("/sample-label-2.png");
+                      const blob = await res.blob();
+                      const sampleFile = new File([blob], "science-diet-large-breed-label.png", { type: "image/png" });
+                      setFile(sampleFile);
+                    }}
+                    className="text-xs text-emit-400 hover:text-emit-300 underline underline-offset-2 transition-colors"
+                  >
+                    Science Diet Large Breed
                   </button>
                 </div>
               )}
