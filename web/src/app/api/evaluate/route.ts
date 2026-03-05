@@ -12,21 +12,33 @@ function parseScore(report: string): number | null {
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
-    const file = formData.get("file") as File | null;
+    const files = formData.getAll("files") as File[];
     const categories =
       (formData.get("categories") as string) || "animal-food-labeling,aafco-pet-food";
 
-    if (!file) {
-      return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
+    if (files.length === 0) {
+      return NextResponse.json({ error: "No files uploaded" }, { status: 400 });
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    // Extract text from all files in parallel
+    const extractions = await Promise.all(
+      files.map(async (file) => {
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+        const text = await extractLabelFromBuffer(buffer, file.name);
+        return { name: file.name, text };
+      })
+    );
 
-    // Phase 1: Extract label text (Vision OCR or plain text)
-    const labelText = await extractLabelFromBuffer(buffer, file.name);
+    // Combine all extracted text
+    const labelText =
+      extractions.length === 1
+        ? extractions[0].text
+        : extractions
+            .map((e, i) => `=== File ${i + 1}: ${e.name} ===\n${e.text}`)
+            .join("\n\n");
 
-    // Phase 2: RAG-powered compliance evaluation
+    // RAG-powered compliance evaluation
     const catList = categories.split(",").filter(Boolean);
     const report = await evaluateCompliance(
       labelText,

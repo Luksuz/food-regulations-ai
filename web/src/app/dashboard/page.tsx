@@ -76,7 +76,7 @@ function ProgressBar({ progress, label }: { progress: number; label: string }) {
 
 export default function Dashboard() {
   const [isDragging, setIsDragging] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [selectedCats, setSelectedCats] = useState<string[]>(["animal-food-labeling", "aafco-pet-food"]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -86,17 +86,25 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const addFiles = useCallback((newFiles: FileList | File[]) => {
+    const arr = Array.from(newFiles);
+    setFiles((prev) => [...prev, ...arr]);
+  }, []);
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    const dropped = e.dataTransfer.files[0];
-    if (dropped) setFile(dropped);
-  }, []);
+    if (e.dataTransfer.files.length > 0) addFiles(e.dataTransfer.files);
+  }, [addFiles]);
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = e.target.files?.[0];
-    if (selected) setFile(selected);
-  }, []);
+    if (e.target.files && e.target.files.length > 0) addFiles(e.target.files);
+    e.target.value = "";
+  }, [addFiles]);
 
   const toggleCategory = (id: string) => {
     setSelectedCats((prev) =>
@@ -105,7 +113,7 @@ export default function Dashboard() {
   };
 
   const analyze = async () => {
-    if (!file || selectedCats.length === 0) return;
+    if (files.length === 0 || selectedCats.length === 0) return;
 
     setIsAnalyzing(true);
     setError(null);
@@ -114,7 +122,7 @@ export default function Dashboard() {
 
     // Simulated progress steps — Goal-Gradient Effect
     const steps = [
-      { p: 15, l: "Uploading label..." },
+      { p: 15, l: `Uploading ${files.length} file${files.length > 1 ? "s" : ""}...` },
       { p: 35, l: "Extracting text with AI Vision..." },
       { p: 55, l: "Retrieving regulatory context..." },
       { p: 75, l: "Evaluating compliance..." },
@@ -132,7 +140,7 @@ export default function Dashboard() {
 
     try {
       const formData = new FormData();
-      formData.append("file", file);
+      files.forEach((f) => formData.append("files", f));
       formData.append("categories", selectedCats.join(","));
 
       const res = await fetch("/api/evaluate", { method: "POST", body: formData });
@@ -148,9 +156,10 @@ export default function Dashboard() {
       setProgress(100);
       setProgressLabel("Complete!");
 
+      const fileName = files.length === 1 ? files[0].name : `${files.length} files — ${files[0].name}`;
       const report: Report = {
         id: crypto.randomUUID(),
-        fileName: file.name,
+        fileName,
         score: data.score,
         report: data.report,
         labelText: data.labelText,
@@ -262,7 +271,7 @@ export default function Dashboard() {
               <div
                 className={`upload-zone relative border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all ${
                   isDragging ? "border-emit-400 bg-emit-500/5 scale-[1.01]" : "border-night-600"
-                } ${file ? "border-emit-500/50 bg-emit-500/3" : ""}`}
+                } ${files.length > 0 ? "border-emit-500/50 bg-emit-500/3" : ""}`}
                 onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                 onDragLeave={() => setIsDragging(false)}
                 onDrop={handleDrop}
@@ -272,19 +281,20 @@ export default function Dashboard() {
                   ref={fileInputRef}
                   type="file"
                   accept=".jpg,.jpeg,.png,.webp,.gif,.txt"
+                  multiple
                   className="hidden"
                   onChange={handleFileSelect}
                 />
 
-                {file ? (
+                {files.length > 0 ? (
                   <div className="space-y-3">
                     <div className="w-14 h-14 mx-auto rounded-xl bg-emit-500/10 flex items-center justify-center">
                       <svg className="w-7 h-7 text-emit-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
-                    <p className="font-semibold">{file.name}</p>
-                    <p className="text-sm text-night-400">{(file.size / 1024).toFixed(1)} KB — Click to change</p>
+                    <p className="font-semibold">{files.length} file{files.length > 1 ? "s" : ""} selected</p>
+                    <p className="text-sm text-night-400">Click to add more</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -293,11 +303,35 @@ export default function Dashboard() {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                       </svg>
                     </div>
-                    <p className="font-semibold">Upload a photo of your product label</p>
-                    <p className="text-sm text-night-400">Supports JPG, PNG, WEBP, GIF, or TXT</p>
+                    <p className="font-semibold">Upload photos of your product label</p>
+                    <p className="text-sm text-night-400">Upload multiple images to cover all label panels</p>
+                    <p className="text-xs text-night-500">Supports JPG, PNG, WEBP, GIF, or TXT</p>
                   </div>
                 )}
               </div>
+
+              {/* File list with remove buttons */}
+              {files.length > 0 && (
+                <div className="mt-3 space-y-1.5">
+                  {files.map((f, i) => (
+                    <div key={`${f.name}-${i}`} className="flex items-center justify-between px-4 py-2 rounded-lg bg-night-800/30 border border-night-700/30">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-xs text-night-500 shrink-0">{i + 1}.</span>
+                        <span className="text-sm truncate">{f.name}</span>
+                        <span className="text-xs text-night-500 shrink-0">{(f.size / 1024).toFixed(0)} KB</span>
+                      </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); removeFile(i); }}
+                        className="ml-2 p-1 rounded hover:bg-night-700 text-night-500 hover:text-danger-400 transition-colors shrink-0"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Upload guidance */}
               <div className="mt-6 p-4 rounded-xl border border-night-700/30 bg-night-800/20">
@@ -321,11 +355,11 @@ export default function Dashboard() {
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-night-500 mt-3">Tip: If your label spans multiple panels, take separate photos or combine them into one image. Missing elements will be flagged as violations.</p>
+                <p className="text-xs text-night-500 mt-3">Tip: Upload multiple photos to cover all label panels (front, back, sides). The AI will combine all extracted text before evaluating. Missing elements will be flagged as violations.</p>
               </div>
 
               {/* Sample Labels */}
-              {!file && (
+              {files.length === 0 && (
                 <div className="mt-4 flex items-center gap-3 flex-wrap">
                   <span className="text-xs text-night-500">or try a sample:</span>
                   <button
@@ -333,7 +367,7 @@ export default function Dashboard() {
                       const res = await fetch("/sample-label.webp");
                       const blob = await res.blob();
                       const sampleFile = new File([blob], "pedigree-dog-food-label.webp", { type: "image/webp" });
-                      setFile(sampleFile);
+                      setFiles([sampleFile]);
                     }}
                     className="text-xs text-emit-400 hover:text-emit-300 underline underline-offset-2 transition-colors"
                   >
@@ -345,7 +379,7 @@ export default function Dashboard() {
                       const res = await fetch("/sample-label-2.png");
                       const blob = await res.blob();
                       const sampleFile = new File([blob], "science-diet-large-breed-label.png", { type: "image/png" });
-                      setFile(sampleFile);
+                      setFiles([sampleFile]);
                     }}
                     className="text-xs text-emit-400 hover:text-emit-300 underline underline-offset-2 transition-colors"
                   >
@@ -386,7 +420,7 @@ export default function Dashboard() {
               {/* Analyze Button */}
               <button
                 onClick={analyze}
-                disabled={!file || selectedCats.length === 0}
+                disabled={files.length === 0 || selectedCats.length === 0}
                 className="mt-8 w-full h-14 rounded-xl bg-emit-500 text-night-950 font-semibold text-lg hover:bg-emit-400 disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-[0_0_30px_rgba(16,185,129,0.2)]"
               >
                 Analyze Label for Compliance
@@ -411,7 +445,7 @@ export default function Dashboard() {
                   </svg>
                 </div>
                 <h2 className="font-[family-name:var(--font-display)] text-xl mb-2">Analyzing Your Label</h2>
-                <p className="text-sm text-night-400">{file?.name}</p>
+                <p className="text-sm text-night-400">{files.length === 1 ? files[0].name : `${files.length} files`}</p>
               </div>
               <ProgressBar progress={progress} label={progressLabel} />
               <div className="mt-6 grid grid-cols-5 gap-1">
@@ -442,7 +476,7 @@ export default function Dashboard() {
                   </p>
                 </div>
                 <button
-                  onClick={() => { setCurrentReport(null); setFile(null); setProgress(0); setError(null); }}
+                  onClick={() => { setCurrentReport(null); setFiles([]); setProgress(0); setError(null); }}
                   className="h-10 px-5 rounded-lg border border-night-600 text-sm text-night-300 hover:border-emit-500 hover:text-emit-400 transition-all"
                 >
                   New Scan
