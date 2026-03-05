@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Report {
   id: string;
@@ -172,51 +174,24 @@ export default function Dashboard() {
     setProgressLabel("Complete!");
   };
 
-  // Parse report sections for styled rendering
-  const renderReport = (markdown: string) => {
-    const lines = markdown.split("\n");
-    const elements: React.ReactNode[] = [];
-
-    lines.forEach((line, i) => {
-      if (line.startsWith("# ")) {
-        elements.push(<h2 key={i} className="font-[family-name:var(--font-display)] text-2xl mt-8 mb-4 text-emit-400">{line.slice(2)}</h2>);
-      } else if (line.startsWith("## ")) {
-        elements.push(<h3 key={i} className="font-[family-name:var(--font-display)] text-lg mt-6 mb-3 text-white/90 border-b border-night-700 pb-2">{line.slice(3)}</h3>);
-      } else if (line.startsWith("|")) {
-        // Table row
-        const cells = line.split("|").filter(Boolean).map((c) => c.trim());
-        if (line.includes("---")) return;
-        const isHeader = i > 0 && lines[i + 1]?.includes("---");
-        elements.push(
-          <div key={i} className={`grid grid-cols-${cells.length} gap-2 py-2 px-3 text-sm ${isHeader ? "font-semibold text-night-300 bg-night-700/30 rounded-t" : "border-b border-night-700/30"}`}>
-            {cells.map((cell, j) => (
-              <span key={j} className={cell === "Present" ? "text-emit-400" : cell === "Missing" ? "text-danger-400" : ""}>{cell}</span>
-            ))}
-          </div>
-        );
-      } else if (/^\d+\.\s/.test(line)) {
-        const isDanger = /violation|misleading|unsubstantiat|no evidence|no substantiat/i.test(line);
-        elements.push(
-          <div key={i} className={`flex gap-3 py-2 text-sm ${isDanger ? "text-danger-400" : "text-night-300"}`}>
-            <span className="shrink-0 text-night-500">{line.match(/^\d+/)?.[0]}.</span>
-            <span>{line.replace(/^\d+\.\s*/, "")}</span>
-          </div>
-        );
-      } else if (line.startsWith("- ")) {
-        const isWarn = /require|insufficient|no specific/i.test(line);
-        elements.push(
-          <div key={i} className="flex gap-2 py-1.5 text-sm text-night-300">
-            <span className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${isWarn ? "bg-warn-500" : "bg-emit-500"}`} />
-            <span>{line.slice(2)}</span>
-          </div>
-        );
-      } else if (line.trim()) {
-        elements.push(<p key={i} className="text-sm text-night-300 leading-relaxed py-1">{line}</p>);
+  // Load history from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("labelguard-reports");
+      if (saved) {
+        setHistory(JSON.parse(saved));
       }
-    });
+    } catch {}
+  }, []);
 
-    return elements;
-  };
+  // Persist history to localStorage on change
+  useEffect(() => {
+    if (history.length > 0) {
+      try {
+        localStorage.setItem("labelguard-reports", JSON.stringify(history));
+      } catch {}
+    }
+  }, [history]);
 
   return (
     <div className="min-h-screen flex">
@@ -431,8 +406,32 @@ export default function Dashboard() {
                 </div>
 
                 {/* Report Content */}
-                <div className="p-6 rounded-2xl border border-night-700/50 bg-night-800/20 overflow-x-auto">
-                  {renderReport(currentReport.report)}
+                <div className="p-6 rounded-2xl border border-night-700/50 bg-night-800/20 overflow-x-auto prose-report">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      h1: ({ children }) => <h2 className="font-[family-name:var(--font-display)] text-2xl mt-8 mb-4 text-emit-400">{children}</h2>,
+                      h2: ({ children }) => <h3 className="font-[family-name:var(--font-display)] text-lg mt-6 mb-3 text-white/90 border-b border-night-700 pb-2">{children}</h3>,
+                      h3: ({ children }) => <h4 className="font-[family-name:var(--font-display)] text-base mt-4 mb-2 text-white/80">{children}</h4>,
+                      p: ({ children }) => <p className="text-sm text-night-300 leading-relaxed py-1">{children}</p>,
+                      strong: ({ children }) => <strong className="text-white/90 font-semibold">{children}</strong>,
+                      ul: ({ children }) => <ul className="space-y-1 my-2">{children}</ul>,
+                      ol: ({ children }) => <ol className="space-y-1 my-2 list-decimal list-inside">{children}</ol>,
+                      li: ({ children }) => <li className="text-sm text-night-300 leading-relaxed">{children}</li>,
+                      table: ({ children }) => <div className="overflow-x-auto my-4"><table className="w-full text-sm border-collapse">{children}</table></div>,
+                      thead: ({ children }) => <thead className="bg-night-700/30">{children}</thead>,
+                      th: ({ children }) => <th className="text-left px-3 py-2 font-semibold text-night-300 border-b border-night-700">{children}</th>,
+                      td: ({ children }) => {
+                        const text = String(children);
+                        const isPass = /present|pass|compliant|yes/i.test(text);
+                        const isFail = /missing|fail|violation|no\b/i.test(text);
+                        return <td className={`px-3 py-2 border-b border-night-700/30 ${isPass ? "text-emit-400" : isFail ? "text-danger-400" : "text-night-300"}`}>{children}</td>;
+                      },
+                      code: ({ children }) => <code className="font-[family-name:var(--font-mono)] text-xs bg-night-700/50 px-1.5 py-0.5 rounded">{children}</code>,
+                    }}
+                  >
+                    {currentReport.report}
+                  </ReactMarkdown>
                 </div>
               </div>
 
