@@ -271,7 +271,7 @@ export default function Dashboard() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".jpg,.jpeg,.png,.webp,.gif,.txt,.pdf"
+                  accept=".jpg,.jpeg,.png,.webp,.gif,.txt"
                   className="hidden"
                   onChange={handleFileSelect}
                 />
@@ -293,10 +293,35 @@ export default function Dashboard() {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                       </svg>
                     </div>
-                    <p className="font-semibold">Drop your label here, or click to browse</p>
-                    <p className="text-sm text-night-400">Supports JPG, PNG, WEBP, PDF, or TXT</p>
+                    <p className="font-semibold">Upload a photo of your product label</p>
+                    <p className="text-sm text-night-400">Supports JPG, PNG, WEBP, GIF, or TXT</p>
                   </div>
                 )}
+              </div>
+
+              {/* Upload guidance */}
+              <div className="mt-6 p-4 rounded-xl border border-night-700/30 bg-night-800/20">
+                <p className="text-sm font-semibold mb-2 text-night-200">For the best analysis, capture all of these on the label:</p>
+                <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1.5">
+                  {[
+                    "Product name & brand",
+                    "Guaranteed Analysis (protein, fat, fiber, moisture)",
+                    "Full ingredients list",
+                    "AAFCO nutritional adequacy statement",
+                    "Feeding directions",
+                    "Net weight",
+                    "Manufacturer name & address",
+                    "Marketing claims (grain-free, organic, etc.)",
+                    "Calorie content",
+                    "Species / life stage (e.g. Adult Dogs)",
+                  ].map((item) => (
+                    <div key={item} className="flex items-start gap-2 text-xs text-night-400">
+                      <span className="mt-1 w-1 h-1 rounded-full bg-emit-500/60 shrink-0" />
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-night-500 mt-3">Tip: If your label spans multiple panels, take separate photos or combine them into one image. Missing elements will be flagged as violations.</p>
               </div>
 
               {/* Sample Labels */}
