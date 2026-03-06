@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 const NAV_LINKS = [
+  { label: "Solutions", href: "#solutions" },
   { label: "How It Works", href: "#how-it-works" },
   { label: "Pricing", href: "#pricing" },
   { label: "Testimonials", href: "#testimonials" },
@@ -84,6 +85,101 @@ const PRICING = [
     ],
     cta: "Contact Sales",
     highlighted: false,
+  },
+];
+
+const SOLUTIONS = [
+  {
+    title: "FDA 21 CFR Part 501 Compliance",
+    desc: "Validates your animal food labels against the full text of FDA 21 CFR Part 501 — covering required label elements, identity statements, net quantity declarations, ingredient listing format, and manufacturer information requirements.",
+    status: "live" as const,
+    icon: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21" />
+      </svg>
+    ),
+  },
+  {
+    title: "AAFCO Model Regulation Analysis",
+    desc: "Checks your pet food label against AAFCO Model Regulations — nutritional adequacy statements (feeding tests vs. formulation), guaranteed analysis formatting under the new Pet Nutrition Facts requirements, calorie content placement, and ingredient naming conventions.",
+    status: "live" as const,
+    icon: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+      </svg>
+    ),
+  },
+  {
+    title: "GRAS Substance Validation",
+    desc: "Cross-references your ingredient list against FDA 21 CFR Parts 582 and 584 — the Generally Recognized as Safe databases for both human food and animal feed. Flags any ingredients that lack GRAS status or are used outside approved conditions.",
+    status: "live" as const,
+    icon: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M19 14.5l-2.47 2.47a2.25 2.25 0 01-1.59.659H9.06a2.25 2.25 0 01-1.591-.659L5 14.5m14 0V18a2.25 2.25 0 01-2.25 2.25H7.25A2.25 2.25 0 015 18v-3.5" />
+      </svg>
+    ),
+  },
+  {
+    title: "Marketing Claims Audit",
+    desc: "Evaluates every marketing claim on your label — \"grain-free\", \"human-grade\", \"clinically proven\", \"natural\" — against the regulatory context to determine if it is substantiated, misleading, or requires additional qualification under AAFCO or FDA rules.",
+    status: "live" as const,
+    icon: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+      </svg>
+    ),
+  },
+  {
+    title: "AI-Powered Label OCR",
+    desc: "Upload a photo of any label panel and our AI vision model extracts every detail — product name, guaranteed analysis values, full ingredient lists, AAFCO statements, feeding directions, and manufacturer info. Supports multi-image uploads for labels that span multiple panels.",
+    status: "live" as const,
+    icon: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+    ),
+  },
+  {
+    title: "Report History & Dashboard",
+    desc: "Every compliance report is saved locally so you can revisit past analyses, compare scores across products, and track improvements. Your data stays in your browser — nothing is stored on our servers.",
+    status: "live" as const,
+    icon: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5" />
+      </svg>
+    ),
+  },
+  {
+    title: "Batch Label Processing",
+    desc: "Upload an entire product line at once and receive compliance reports for each label in a single batch run. Ideal for manufacturers managing dozens of SKUs across multiple formulations.",
+    status: "coming" as const,
+    icon: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6 6.878V6a2.25 2.25 0 012.25-2.25h7.5A2.25 2.25 0 0118 6v.878m-12 0c.235-.083.487-.128.75-.128h10.5c.263 0 .515.045.75.128m-12 0A2.25 2.25 0 004.5 9v.878m13.5-3A2.25 2.25 0 0119.5 9v.878m0 0a2.246 2.246 0 00-.75-.128H5.25c-.263 0-.515.045-.75.128m15 0A2.25 2.25 0 0121 12v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6c0-.98.626-1.813 1.5-2.122" />
+      </svg>
+    ),
+  },
+  {
+    title: "API Access",
+    desc: "Integrate compliance checking directly into your product lifecycle with our REST API. Automate label reviews as part of your CI/CD pipeline, ERP system, or label design workflow.",
+    status: "coming" as const,
+    icon: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+      </svg>
+    ),
+  },
+  {
+    title: "State Feed Control Regulations",
+    desc: "Expand your compliance checks beyond federal standards with state-specific feed control regulations. Each state has unique registration, labeling, and ingredient requirements that can vary significantly.",
+    status: "coming" as const,
+    icon: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+      </svg>
+    ),
   },
 ];
 
@@ -216,6 +312,45 @@ export default function LandingPage() {
                 </div>
                 <h3 className="text-xl font-semibold mb-3">{step.title}</h3>
                 <p className="text-night-300 leading-relaxed text-sm">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Solutions */}
+      <section id="solutions" className="py-24 px-6 border-t border-night-700/50">
+        <div className="max-w-5xl mx-auto">
+          <p className="text-xs uppercase tracking-[0.25em] text-emit-500 font-semibold mb-3">Solutions</p>
+          <h2 className="font-[family-name:var(--font-display)] text-3xl md:text-4xl mb-4">
+            Every angle of label compliance, covered
+          </h2>
+          <p className="text-night-300 mb-16 max-w-2xl">
+            Our AI evaluates your labels against multiple regulatory frameworks simultaneously, catching violations that manual review often misses.
+          </p>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {SOLUTIONS.map((sol) => (
+              <div
+                key={sol.title}
+                className={`relative p-6 rounded-2xl border transition-all ${
+                  sol.status === "live"
+                    ? "border-night-700/50 bg-night-800/30 hover:border-emit-500/30"
+                    : "border-night-700/30 bg-night-800/15"
+                }`}
+              >
+                {sol.status === "coming" && (
+                  <div className="absolute top-4 right-4 px-2 py-0.5 rounded-full bg-warn-500/10 border border-warn-500/20 text-warn-400 text-[10px] font-semibold uppercase tracking-wider">
+                    In Development
+                  </div>
+                )}
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${
+                  sol.status === "live" ? "bg-emit-500/10 text-emit-500" : "bg-night-700/30 text-night-500"
+                }`}>
+                  {sol.icon}
+                </div>
+                <h3 className={`text-base font-semibold mb-2 ${sol.status === "coming" ? "text-night-400" : ""}`}>{sol.title}</h3>
+                <p className={`text-sm leading-relaxed ${sol.status === "coming" ? "text-night-500" : "text-night-300"}`}>{sol.desc}</p>
               </div>
             ))}
           </div>
