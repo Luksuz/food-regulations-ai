@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 
 const NAV_LINKS = [
   { label: "Solutions", href: "#solutions" },
@@ -210,7 +209,6 @@ function ShieldIcon({ className }: { className?: string }) {
 }
 
 export default function LandingPage() {
-  const [email, setEmail] = useState("");
 
   return (
     <div className="min-h-screen">

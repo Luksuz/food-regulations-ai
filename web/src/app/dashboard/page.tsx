@@ -84,6 +84,7 @@ export default function Dashboard() {
   const [currentReport, setCurrentReport] = useState<Report | null>(null);
   const [history, setHistory] = useState<Report[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const addFiles = useCallback((newFiles: FileList | File[]) => {
@@ -150,6 +151,8 @@ export default function Dashboard() {
 
       if (!res.ok) {
         setError(data.error || "Evaluation failed");
+        setProgress(0);
+        setProgressLabel("");
         return;
       }
 
@@ -195,53 +198,98 @@ export default function Dashboard() {
 
   // Persist history to localStorage on change
   useEffect(() => {
-    if (history.length > 0) {
-      try {
+    try {
+      if (history.length > 0) {
         localStorage.setItem("labelguard-reports", JSON.stringify(history));
-      } catch {}
-    }
+      } else {
+        localStorage.removeItem("labelguard-reports");
+      }
+    } catch {}
   }, [history]);
+
+  const deleteReport = (id: string) => {
+    setHistory((prev) => prev.filter((r) => r.id !== id));
+    if (currentReport?.id === id) {
+      setCurrentReport(null);
+      setFiles([]);
+      setProgress(0);
+    }
+  };
+
+  const clearHistory = () => {
+    setHistory([]);
+    setCurrentReport(null);
+    setFiles([]);
+    setProgress(0);
+  };
 
   return (
     <div className="min-h-screen flex">
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-72 shrink-0 border-r border-night-700/50 bg-night-900/50 flex flex-col">
-        <div className="h-16 px-5 flex items-center gap-2.5 border-b border-night-700/50">
+      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-72 shrink-0 border-r border-night-700/50 bg-night-900 lg:bg-night-900/50 flex flex-col transition-transform lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <div className="h-16 px-5 flex items-center justify-between border-b border-night-700/50">
           <Link href="/" className="flex items-center gap-2.5">
             <ShieldIcon className="w-5 h-5 text-emit-500" />
             <span className="font-[family-name:var(--font-display)] text-base">LabelGuard</span>
           </Link>
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-1 text-night-400 hover:text-white">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
         {/* History — Endowment Effect */}
         <div className="flex-1 overflow-y-auto p-4">
-          <p className="text-xs uppercase tracking-widest text-night-500 font-semibold mb-3">Report History</p>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs uppercase tracking-widest text-night-500 font-semibold">Report History</p>
+            {history.length > 0 && (
+              <button onClick={clearHistory} className="text-[10px] text-night-500 hover:text-danger-400 transition-colors">
+                Clear all
+              </button>
+            )}
+          </div>
           {history.length === 0 ? (
             <p className="text-xs text-night-500 italic">No reports yet. Upload a label to get started.</p>
           ) : (
             <div className="space-y-1.5">
               {history.map((r) => (
-                <button
+                <div
                   key={r.id}
-                  onClick={() => loadReport(r)}
-                  className={`w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm ${
+                  className={`group relative w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm cursor-pointer ${
                     currentReport?.id === r.id ? "bg-emit-500/10 border border-emit-500/30" : "hover:bg-night-700/50 border border-transparent"
                   }`}
+                  onClick={() => { loadReport(r); setSidebarOpen(false); }}
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium truncate max-w-[140px]">{r.fileName}</span>
-                    {r.score !== null && (
-                      <span className={`font-[family-name:var(--font-mono)] text-xs ${
-                        r.score >= 80 ? "text-emit-400" : r.score >= 60 ? "text-warn-400" : "text-danger-400"
-                      }`}>
-                        {r.score}%
-                      </span>
-                    )}
+                    <span className="font-medium truncate max-w-[120px]">{r.fileName}</span>
+                    <div className="flex items-center gap-1.5">
+                      {r.score !== null && (
+                        <span className={`font-[family-name:var(--font-mono)] text-xs ${
+                          r.score >= 80 ? "text-emit-400" : r.score >= 60 ? "text-warn-400" : "text-danger-400"
+                        }`}>
+                          {r.score}%
+                        </span>
+                      )}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); deleteReport(r.id); }}
+                        className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-night-500 hover:text-danger-400 transition-all"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                   <span className="text-xs text-night-500">
                     {new Date(r.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </span>
-                </button>
+                </div>
               ))}
             </div>
           )}
@@ -259,8 +307,18 @@ export default function Dashboard() {
 
       {/* Main */}
       <main className="flex-1 flex flex-col min-h-screen">
-        <header className="h-16 px-8 flex items-center border-b border-night-700/50">
+        <header className="h-16 px-6 lg:px-8 flex items-center gap-4 border-b border-night-700/50">
+          <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-1 text-night-400 hover:text-white">
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+          </button>
           <h1 className="font-[family-name:var(--font-display)] text-lg">Compliance Evaluator</h1>
+          {history.length > 0 && (
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden ml-auto text-xs text-night-400 hover:text-emit-400">
+              {history.length} report{history.length > 1 ? "s" : ""}
+            </button>
+          )}
         </header>
 
         <div className="flex-1 overflow-y-auto p-8">
